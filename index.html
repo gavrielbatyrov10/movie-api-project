@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Website</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            animation: skeletonLoading 6s infinite;
+            background: rgba(183, 183, 183, 0.931);
+            background-size: 200% 100%;
+        }
+
+       
+
+        button {
+            padding: 10px 24px;
+            color: wheat;
+            background-color: black;
+        }
+
+        p {
+            line-height: 1.5;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .search-container {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+        }
+
+        #searchInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+
+        #searchBtn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: 1px solid #007bff;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+
+        #loadMoreBtn {
+            background-color: #8f8f8f;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #moviesList {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .movieItem {
+            width: calc(33.33% - 20px);
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .movieItem:hover {
+            transform: scale(1.05);
+        }
+
+        .moviePoster {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .skeleton {
+            animation: skeletonLoading 2s ease-in-out;
+            background: rgb(191, 190, 190);
+          background-size: 200% 100%;
+        }
+
+        @keyframes skeletonLoading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        #movieDetailsContainer {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #selectedMovieContainer img {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        #selectedMovieContainer h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #movieInfoContainer {
+            text-align: left;
+            max-width: 400px;
+            margin: auto;
+        }
+
+        #movieInfoContainer p {
+            margin: 5px 0;
+        }
+
+        #ratingsContainer {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .rating {
+       display: none;
+        }
+
+        .rating i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body class="skeleton">
+
+<header>
+    <h1>Movie Website</h1>
+</header>
+
+<div class="container">
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for a movie">
+        <button id="searchBtn" onclick="searchMovies()">Search</button>
+    </div>
+    <ul id="moviesList"></ul>
+    <button id="loadMoreBtn" onclick="loadMoreMovies()">Load More</button>
+</div>
+
+<div class="container" id="movieDetailsContainer">
+    <div id="selectedMovieContainer">
+        <!-- Selected movie will be displayed here -->
+    </div>
+    <div id="movieInfoContainer">
+        <!-- Movie details will be displayed here -->
+    </div>
+    <button id="backBtn" onclick="goBack()">Back</button>
+</div>
+
+<script>
+    const apiKey = '1465e977';
+    const itemsPerPage = 9;
+    let currentPage = 1;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchMovies('fast');
+    });
+
+    function fetchMovies(searchTerm) {
+        const apiUrl = `https://www.omdbapi.com/?apikey=${apiKey}&s=${searchTerm}&page=${currentPage}`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                displayMovies(data.Search);
+            })
+            .catch(error => {
+                console.error('Error fetching movies:', error);
+            });
+    }
+
+    function displayMovies(movies) {
+        const moviesList = document.getElementById('moviesList');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        moviesList.innerHTML = '';
+
+        if (movies) {
+            movies.forEach((movie, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('movieItem', 'skeleton'); // Add skeleton loading class
+                listItem.setAttribute('data-id', movie.imdbID);
+
+                const img = document.createElement('img');
+                img.src = movie.Poster !== 'N/A' ? movie.Poster : 'placeholder-image.jpg';
+                img.alt = movie.Title;
+                img.classList.add('moviePoster');
+
+                listItem.appendChild(img);
+                moviesList.appendChild(listItem);
+
+                // Add a click event listener to redirect to the movie-details.html page
+                listItem.addEventListener('click', () => {
+                    fetchMovieDetails(movie.imdbID);
+                });
+
+                // Remove skeleton loading class after 2 seconds
+                setTimeout(() => {
+                    listItem.classList.remove('skeleton');
+                }, 2000);
+            });
+
+            // If there are more pages, show the "Load More" button
+            loadMoreBtn.style.display = movies.length === itemsPerPage ? 'block' : 'none';
+        }
+    }
+
+    function searchMovies() {
+        const searchTerm = document.getElementById('searchInput').value;
+        currentPage = 1; // Reset to the first page when searching
+        fetchMovies(searchTerm);
+    }
+
+    function loadMoreMovies() {
+        currentPage++;
+        const searchTerm = document.getElementById('searchInput').value;
+        fetchMovies(searchTerm);
+    }
+
+    function redirectToMoviePage(movieId) {
+        window.location.href = `movie-details.html?id=${movieId}`;
+    }
+
+    function fetchMovieDetails(movieId) {
+        const apiUrl = `https://www.omdbapi.com/?apikey=${apiKey}&i=${movieId}`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                displayMovieDetails(data);
+            })
+            .catch(error => {
+                console.error('Error fetching movie details:', error);
+            });
+    }
+
+    function displayMovieDetails(movie) {
+        const selectedMovieContainer = document.getElementById('selectedMovieContainer');
+        const movieInfoContainer = document.getElementById('movieInfoContainer');
+
+        selectedMovieContainer.innerHTML = '';
+        movieInfoContainer.innerHTML = '';
+
+        if (movie) {
+            const img = document.createElement('img');
+            img.src = movie.Poster !== 'N/A' ? movie.Poster : 'placeholder-image.jpg';
+            img.alt = movie.Title;
+            img.classList.add('moviePoster');
+
+            const title = document.createElement('h2');
+            title.textContent = movie.Title;
+
+            selectedMovieContainer.appendChild(img);
+            selectedMovieContainer.appendChild(title);
+
+            // Display movie details
+            const year = document.createElement('p');
+            year.textContent = `Year: ${movie.Year}`;
+            movieInfoContainer.appendChild(year);
+
+            const genre = document.createElement('p');
+            genre.textContent = `Genre: ${movie.Genre}`;
+            movieInfoContainer.appendChild(genre);
+
+            const plot = document.createElement('p');
+            plot.textContent = `Plot: ${movie.Plot}`;
+            movieInfoContainer.appendChild(plot);
+
+            const ratingsContainer = document.createElement('div');
+            ratingsContainer.id = 'ratingsContainer';
+
+            movie.Ratings.forEach(rating => {
+                const ratingElement = document.createElement('div');
+                ratingElement.classList.add('rating');
+                const ratingSource = document.createElement('span');
+                ratingSource.textContent = rating.Source + ':';
+                const ratingValue = document.createElement('span');
+                ratingValue.textContent = rating.Value;
+                ratingElement.appendChild(ratingSource);
+                ratingElement.appendChild(ratingValue);
+                ratingsContainer.appendChild(ratingElement);
+            });
+
+            movieInfoContainer.appendChild(ratingsContainer);
+            
+            const imdbLink = document.createElement('a');
+            imdbLink.href = `https://www.imdb.com/title/${movie.imdbID}/`;
+            imdbLink.textContent = 'View on IMDb';
+            imdbLink.target = '_blank';
+            imdbLink.style.display = 'block';
+            imdbLink.style.marginTop = '10px';
+            movieInfoContainer.appendChild(imdbLink);
+
+            // Show movie details container and hide main container
+            const mainContainer = document.querySelector('.container');
+            const movieDetailsContainer = document.getElementById('movieDetailsContainer');
+            mainContainer.style.display = 'none';
+            movieDetailsContainer.style.display = 'flex';
+        }
+    }
+
+    function goBack() {
+        const mainContainer = document.querySelector('.container');
+        const movieDetailsContainer = document.getElementById('movieDetailsContainer');
+
+        // Show main container and hide movie details container
+        mainContainer.style.display = 'flex';
+        movieDetailsContainer.style.display = 'none';
+    }
+</script>
+</body>
+</html>
