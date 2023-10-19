@@ -16,8 +16,6 @@
             background-size: 200% 100%;
         }
 
-       
-
         button {
             padding: 10px 24px;
             color: wheat;
@@ -111,7 +109,7 @@
         .skeleton {
             animation: skeletonLoading 2s ease-in-out;
             background: rgb(191, 190, 190);
-          background-size: 200% 100%;
+            background-size: 200% 100%;
         }
 
         @keyframes skeletonLoading {
@@ -158,11 +156,24 @@
         }
 
         .rating {
-       display: none;
+            display: none;
         }
 
         .rating i {
             margin-right: 5px;
+        }
+
+        /* Media Queries */
+        @media screen and (max-width: 768px) {
+            .movieItem {
+                width: calc(50% - 20px);
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .movieItem {
+                width: calc(100% - 20px);
+            }
         }
     </style>
 </head>
